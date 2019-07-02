@@ -356,7 +356,7 @@ let forgotPassword = (req, res) => {
                 to: newUserObj.email, // list of receivers
                 subject: "To-Do-List Planner Password Reset", // Subject line
                 text: `Please click on the following link to reset your password: \n\n 
-    http://localhost:4200/reset-password/${newUserObj.resetPasswordToken}`
+    http://youwecan.xyz/reset-password/${newUserObj.resetPasswordToken}`
             }
 
 

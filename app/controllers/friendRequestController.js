@@ -21,7 +21,6 @@ let sendFriendRequest = (req, res) => {
 
     newRequest.save((err, newRequest) => {
         if (err) {
-            console.log(err)
             logger.error(err.message, 'userController: createUser', 10)
             let apiResponse = response.generate(true, 'Failed to send friend request', 500, null)
             res.send(apiResponse)
@@ -61,7 +60,6 @@ let acceptFriendRequest = (req, res) => {
         { $set: { status: 2 } }) //2=accepted
         .exec((err, result) => {
             if (err) {
-                console.log(err)
                 logger.error(err.message, 'FriendRequest Controller:acceptFriendRequest', 10)
                 let apiResponse = response.generate(true, 'Failed To update request', 500, null)
                 res.send(apiResponse)
@@ -79,7 +77,6 @@ let acceptFriendRequest = (req, res) => {
                     { userId: req.body.userId },
                     { $push: { friends: newFriend } }).exec((err, result) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'FriendRequest Controller:acceptFriendRequest', 10)
                             let apiResponse = response.generate(true, 'Failed To update user friend list', 500, null)
                             res.send(apiResponse)
@@ -98,7 +95,6 @@ let acceptFriendRequest = (req, res) => {
                                 { userId: req.body.requesterId },
                                 { $push: { friends: user } }).exec((err, result) => {
                                     if (err) {
-                                        console.log(err)
                                         logger.error(err.message, 'FriendRequest Controller:acceptFriendRequest', 10)
                                         let apiResponse = response.generate(true, 'Failed To update user friend list', 500, null)
                                         res.send(apiResponse)
@@ -114,7 +110,6 @@ let acceptFriendRequest = (req, res) => {
                                             .select('-__v -_id')
                                             .exec((err, requestDetails) => {
                                                 if (err) {
-                                                    console.log(err)
                                                     logger.error(err.message, 'FriendRequest Controller:acceptFriendRequest', 10)
                                                     let apiResponse = response.generate(true, 'Failed To Find request Details', 500, null)
                                                     res.send(apiResponse)
@@ -139,7 +134,6 @@ let cancelFriendRequest = (req, res) => {
         { $set: { status: 3 } }) //3=rejected
         .exec((err, result) => {
             if (err) {
-                console.log(err)
                 logger.error(err.message, 'FriendRequest Controller:cancelFriendRequest', 10)
                 let apiResponse = response.generate(true, 'Failed To update request', 500, null)
                 res.send(apiResponse)

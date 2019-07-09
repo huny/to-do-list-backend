@@ -16,7 +16,6 @@ let createToDoListHistory = (listDetails, cb) => {
 
     listHistory.save((err, listHistoryDetails) => {
         if (err) {
-            console.log(err)
             logger.error(`Error Occured : ${err}`, 'Database', 10)
             cb(err, null)
         } else {
@@ -30,15 +29,12 @@ let updateToDoListHistory = (listDetails, cb) => {
 
     ToDoListHistoryModel.findOne({ historyId: listDetails.listId }, (err, listState) => {
         if (err) {
-            console.log(err)
             logger.error(`Error Occured : ${err}`, 'Database', 10)
             cb(err, null)
         } else if (check.isEmpty(listState)) {
-            console.log('state not found')
             cb('list state not found', null)
         } else {
             let present = listState.present
-            console.log(listDetails)
 
             ToDoListHistoryModel.update(
                 { historyId: listDetails.listId },
@@ -49,7 +45,6 @@ let updateToDoListHistory = (listDetails, cb) => {
                     } else {
                         ToDoListHistoryModel.findOne({ historyId: listDetails.listId }, (err, listState) => {
                             if (err) {
-                                console.log(err)
                                 logger.error(`Error Occured : ${err}`, 'Database', 10)
                                 cb(err, null)
                             } else {

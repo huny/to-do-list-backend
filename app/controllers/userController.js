@@ -26,7 +26,6 @@ let signUpFunction = (req, res) => {
 
     let validateUserInput = () => {
         return new Promise((resolve, reject) => {
-            console.log(req.body.email);
             if (req.body.email) {
                 if (!validateInput.Email(req.body.email)) {
                     let apiResponse = response.generate(true, 'Email Does not met the requirement', 400, null)
@@ -59,7 +58,6 @@ let signUpFunction = (req, res) => {
                         let apiResponse = response.generate(true, 'Failed To Create User', 500, null)
                         reject(apiResponse)
                     } else if (check.isEmpty(retrievedUserDetails)) {
-                        console.log(req.body)
                         let newUser = new UserModel({
                             userId: shortid.generate(),
                             firstName: req.body.firstName,
@@ -73,7 +71,6 @@ let signUpFunction = (req, res) => {
                         })
                         newUser.save((err, newUser) => {
                             if (err) {
-                                console.log(err)
                                 logger.error(err.message, 'userController: createUser', 10)
                                 let apiResponse = response.generate(true, 'Failed to create new User', 500, null)
                                 reject(apiResponse)
@@ -104,7 +101,6 @@ let signUpFunction = (req, res) => {
             res.send(apiResponse)
         })
         .catch((err) => {
-            console.log(err);
             res.send(err);
         })
 
@@ -114,12 +110,10 @@ let signUpFunction = (req, res) => {
 let loginFunction = (req, res) => {
 
     let findUser = () => {
-        console.log("findUser");
         return new Promise((resolve, reject) => {
             if (req.body.email) {
                 UserModel.findOne({ email: req.body.email }, (err, userDetails) => {
                     if (err) {
-                        console.log(err)
                         logger.error('Failed To Retrieve User Data', 'userController: findUser()', 10)
                         let apiResponse = response.generate(true, 'Failed To Find User Details', 500, null)
                         reject(apiResponse)
@@ -140,11 +134,9 @@ let loginFunction = (req, res) => {
         })
     }
     let validatePassword = (retrievedUserDetails) => {
-        console.log("validatePassword");
         return new Promise((resolve, reject) => {
             passwordLib.comparePassword(req.body.password, retrievedUserDetails.password, (err, isMatch) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'userController: validatePassword()', 10)
                     let apiResponse = response.generate(true, 'Login Failed', 202, null)
                     reject(apiResponse)
@@ -166,11 +158,9 @@ let loginFunction = (req, res) => {
     }
 
     let generateToken = (userDetails) => {
-        console.log("generate token");
         return new Promise((resolve, reject) => {
             token.generateToken(userDetails, (err, tokenDetails) => {
                 if (err) {
-                    console.log(err)
                     let apiResponse = response.generate(true, 'Failed To Generate Token', 500, null)
                     reject(apiResponse)
                 } else {
@@ -183,11 +173,9 @@ let loginFunction = (req, res) => {
     }
 
     let saveToken = (tokenDetails) => {
-        console.log("save token");
         return new Promise((resolve, reject) => {
             AuthModel.findOne({ userId: tokenDetails.userId }, (err, retrievedTokenDetails) => {
                 if (err) {
-                    console.log(err.message, 'userController: saveToken', 10)
                     let apiResponse = response.generate(true, 'Failed To Generate Token', 500, null)
                     reject(apiResponse)
                 } else if (check.isEmpty(retrievedTokenDetails)) {
@@ -199,7 +187,6 @@ let loginFunction = (req, res) => {
                     })
                     newAuthToken.save((err, newTokenDetails) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'userController: saveToken', 10)
                             let apiResponse = response.generate(true, 'Failed To Generate Token', 500, null)
                             reject(apiResponse)
@@ -217,7 +204,6 @@ let loginFunction = (req, res) => {
                     retrievedTokenDetails.tokenGenerationTime = time.now()
                     retrievedTokenDetails.save((err, newTokenDetails) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'userController: saveToken', 10)
                             let apiResponse = response.generate(true, 'Failed To Generate Token', 500, null)
                             reject(apiResponse)
@@ -244,8 +230,6 @@ let loginFunction = (req, res) => {
             res.send(apiResponse)
         })
         .catch((err) => {
-            console.log("errorhandler");
-            console.log(err);
             res.status(err.status)
             res.send(err)
         })
@@ -257,7 +241,6 @@ let loginFunction = (req, res) => {
 let logout = (req, res) => {
     AuthModel.findOneAndRemove({ userId: req.user.userId }, (err, result) => {
         if (err) {
-            console.log(err)
             logger.error(err.message, 'user Controller: logout', 10)
             let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
             res.send(apiResponse)
@@ -274,14 +257,10 @@ let logout = (req, res) => {
 //start of forgotPassword function
 let forgotPassword = (req, res) => {
     let findUser = () => {
-        console.log("findUser");
         return new Promise((resolve, reject) => {
             if (req.body.email) {
-                console.log("req body email is there");
-                console.log(req.body);
                 UserModel.findOne({ email: req.body.email }, (err, userDetails) => {
                     if (err) {
-                        console.log(err)
                         logger.error('Failed To Retrieve User Data', 'userController: findUser()', 10)
                         let apiResponse = response.generate(true, 'Failed To Find User Details', 500, null)
                         reject(apiResponse)
@@ -303,12 +282,10 @@ let forgotPassword = (req, res) => {
     }
 
     let generateAndSaveResetPasswordToken = (userDetails) => {
-        console.log("generate token");
         return new Promise((resolve, reject) => {
             //token.generateToken(userDetails, (err, tokenDetails) => {
             crypto.randomBytes(20, (err, buf) => {
                 if (err) {
-                    console.log(err)
                     let apiResponse = response.generate(true, 'Failed to generate password reset token', 500, null)
                     reject(apiResponse)
                 } else {
@@ -317,7 +294,6 @@ let forgotPassword = (req, res) => {
                     userDetails.resetPasswordExpires = Date.now() + 3600000; //1 hour
                     userDetails.save((err, userWithResetPasswordToken) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'userController: createUser', 10)
                             let apiResponse = response.generate(true, 'Failed to save token details', 500, null)
                             reject(apiResponse)
@@ -332,13 +308,7 @@ let forgotPassword = (req, res) => {
     }
 
     let sendMailToResetPassword = (newUserObj) => {
-        console.log("sending mail to user");
         return new Promise((resolve, reject) => {
-
-            // Generate test SMTP service account from ethereal.email
-            //let testAccount = nodemailer.createTestAccount();
-            //console.log(testAccount)
-
             // create reusable transporter object using the default SMTP transport
             let transporter = nodemailer.createTransport({
                 host: 'smtp.gmail.com',
@@ -363,7 +333,6 @@ let forgotPassword = (req, res) => {
             // send mail with defined transport object
             transporter.sendMail(mailOptions, (err) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'userController: createUser', 10)
                     let apiResponse = response.generate(true, 'Failed to send mail', 202, null)
                     reject(apiResponse)
@@ -384,8 +353,6 @@ let forgotPassword = (req, res) => {
             res.send(apiResponse)
         })
         .catch((err) => {
-            console.log("errorhandler");
-            console.log(err);
             res.status(err.status)
             res.send(err)
         })
@@ -396,7 +363,6 @@ let forgotPassword = (req, res) => {
 let goToResetPassword = (req, res) => {
     UserModel.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, (err, user) => {
         if (err) {
-            console.log(err)
             logger.error(err.message, 'user Controller: goToResetPassword', 10)
             let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
             res.send(apiResponse)
@@ -415,7 +381,6 @@ let resetPassword = (req, res) => {
 
     UserModel.findOne({ resetPasswordToken: req.params.token, resetPasswordExpires: { $gt: Date.now() } }, (err, user) => {
         if (err) {
-            console.log(err)
             logger.error(err.message, 'user Controller: resetPassword', 10)
             let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
             res.send(apiResponse)
@@ -430,7 +395,6 @@ let resetPassword = (req, res) => {
 
                 user.save((err, userDetails) => {
                     if (err) {
-                        console.log(err)
                         logger.error(err.message, 'user Controller: resetPassword', 10)
                         let apiResponse = response.generate(true, `error occurred: ${err.message}`, 500, null)
                         res.send(apiResponse)
@@ -475,7 +439,6 @@ let getPeopleYouMayKnow = (req, res) => {
     let recievedRequests = []
     FriendRequestModel.find({ requesterId: req.params.userId, status: 1 })
         .exec((err, sentRequestDetails) => {
-            console.log(sentRequestDetails)
             if (err) {
                 logger.error(err.message, 'User Controller: getPeopleYouMayKnow', 10)
                 let apiResponse = response.generate(true, 'Failed to find sent requests details', 500, null)

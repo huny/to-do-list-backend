@@ -3,19 +3,12 @@
  */
 const socketio = require('socket.io');
 const mongoose = require('mongoose');
-const shortid = require('shortid');
 const logger = require('./loggerLib.js');
-const events = require('events');
-const eventEmitter = new events.EventEmitter();
 const nodemailer = require('nodemailer')
 const UserModel = mongoose.model('User')
-const FriendRequestModel = mongoose.model('FriendRequest')
-const ToDoListModel = mongoose.model('ToDoList')
 
 const tokenLib = require("./tokenLib.js");
 const check = require("./checkLib.js");
-const response = require('./responseLib')
-const time = require('./timeLib')
 const stateManagement = require('./stateManagementLib')
 
 let setServer = (server) => {
@@ -28,23 +21,16 @@ let setServer = (server) => {
 
     myIo.on('connection', (socket) => {
 
-        console.log("on connection--emitting verify user");
-
         socket.emit("verifyUser", "");
 
         // code to verify the user and make him online
 
         socket.on('set-user', (authToken) => {
-
-            console.log("set-user called")
-            console.log(authToken)
             tokenLib.verifyClaimWithoutSecret(authToken, (err, user) => {
                 if (err) {
                     socket.emit('auth-error', { status: 500, error: 'Please provide correct auth token' })
                 }
                 else {
-
-                    console.log("user is verified..setting details");
                     let currentUser = user.data;
                     // setting socket user id 
                     socket.userId = currentUser.userId
@@ -52,14 +38,6 @@ let setServer = (server) => {
 
                     let userObj = { userId: currentUser.userId, fullName: fullName }
                     allOnlineUsers.push(userObj)
-                    console.log(allOnlineUsers)
-
-                    // setting room name
-                    //socket.room = 'myRoom'
-                    // joining chat-group room.
-                    //socket.join(socket.room)
-                    //socket.to(socket.room).broadcast.emit('online-user-list', allOnlineUsers);
-
                 }
             })//end verify claim witout secret
         })//end of listening set user event
@@ -67,35 +45,21 @@ let setServer = (server) => {
         socket.on('disconnect', () => {
             // disconnect the user from socket
             // remove the user from online list
-            // unsubscribe the user from his own channel
-
-            console.log("user is disconnected");
-            // console.log(socket.connectorName);
-            console.log(socket.userId);
             var removeIndex = allOnlineUsers.map(function (user) { return user.userId; }).indexOf(socket.userId);
             allOnlineUsers.splice(removeIndex, 1)
-            console.log(allOnlineUsers)
-
-            //socket.to(socket.room).broadcast.emit('online-user-list', allOnlineUsers);
-            //socket.leave(socket.room)
-
 
         }) // end of listening disconnect event
 
         socket.on('send-request', (request) => {
             let recipientId = request.recipientId
 
-            console.log('send-request called')
             let userOnlineIndex = allOnlineUsers.map(function (user) { return user.userId; }).indexOf(recipientId)
-            console.log(userOnlineIndex)
-            console.log(recipientId)
             if (userOnlineIndex >= 0) {
                 myIo.emit(`request-recieved-${recipientId}`, request)
             }
 
             UserModel.findOne({ userId: recipientId }, (err, userDetails) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'socketLib: send-request', 10)
                 } else if (check.isEmpty(userDetails)) {
                     logger.info('No user Found with this user id', 'socketLib: send-request')
@@ -123,10 +87,9 @@ let setServer = (server) => {
                     // send mail with defined transport object
                     transporter.sendMail(mailOptions, (err) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'socketLib: send-request', 10)
                         } else {
-                            console.log('mail sent successfully')
+                            logger.info('mail sent successfully', 'socketLib: send-request', 10)
                         }
                     });
                 }
@@ -136,17 +99,13 @@ let setServer = (server) => {
         })//end of listening send-request event
 
         socket.on('accept-request', (request) => {
-
-            console.log('accept-request called')
             let userOnlineIndex = allOnlineUsers.map(function (user) { return user.userId; }).indexOf(request.requesterId)
-            console.log(userOnlineIndex)
             if (userOnlineIndex >= 0) {
                 myIo.emit(`request-accepted-${request.requesterId}`, request)
             }
 
             UserModel.findOne({ userId: request.requesterId }, (err, userDetails) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'socketLib: accept-request', 10)
                 } else if (check.isEmpty(userDetails)) {
                     logger.info('No user Found with this user id', 'socketLib: accept-request')
@@ -173,10 +132,9 @@ let setServer = (server) => {
                     // send mail with defined transport object
                     transporter.sendMail(mailOptions, (err) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'socketLib: accept-request', 10)
                         } else {
-                            console.log('mail sent successfully')
+                            logger.info('mail sent successfully', 'socketLib: accept-request', 10)
                         }
                     });
                 }
@@ -186,17 +144,13 @@ let setServer = (server) => {
         })//end of listening accept-request event
 
         socket.on('cancel-request', (request) => {
-
-            console.log('cancel-request called')
             let userOnlineIndex = allOnlineUsers.map(function (user) { return user.userId; }).indexOf(request.requesterId)
-            console.log(userOnlineIndex)
             if (userOnlineIndex >= 0) {
                 myIo.emit(`request-cancelled-${request.requesterId}`, request)
             }
 
             UserModel.findOne({ userId: request.requesterId }, (err, userDetails) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'socketLib: cancel-request', 10)
                 } else if (check.isEmpty(userDetails)) {
                     logger.info('No user Found with this user id', 'socketLib: cancel-request')
@@ -223,10 +177,9 @@ let setServer = (server) => {
                     // send mail with defined transport object
                     transporter.sendMail(mailOptions, (err) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'socketLib: cancel-request', 10)
                         } else {
-                            console.log('mail sent successfully')
+                            logger.info('mail sent successfully', 'socketLib: cancel-request', 10)
                         }
                     });
                 }
@@ -253,7 +206,6 @@ let setServer = (server) => {
                         }//end for loop
 
                         let friendsIds = userDetails.friends.map(function (user) { return user.id })
-                        console.log(friendsIds)
 
                         UserModel.find({ userId: { $in: friendsIds } })
                             .select('-password -__v -_id')
@@ -287,10 +239,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: cancel-request', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.info('mail sent successfully', 'socketLib: cancel-request', 10)
                                             }
                                         });
                                     }//end for loop
@@ -302,9 +253,6 @@ let setServer = (server) => {
             stateManagement.createToDoListHistory(listDetails, (err, listHistoryDetails) => {
                 if (err) {
                     socket.emit('state-management-error', { status: 202, error: 'Some error occured in maintaining state of List' })
-                }
-                else {
-                    console.log(listHistoryDetails)
                 }
             })
 
@@ -364,10 +312,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: add-to-do-item', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.error('mail sent successfully', 'socketLib: add-to-do-item', 10)
                                             }
                                         });
                                     }//end for loop
@@ -381,7 +328,7 @@ let setServer = (server) => {
                     socket.emit('state-management-error', { status: 202, error: 'Some error occured in maintaining state of List' })
                 }
                 else {
-                    console.log(listHistoryDetails)
+                    //do nothing
                 }
             })
 
@@ -442,10 +389,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: edit-to-do-item', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.error('mail sent successfully', 'socketLib: edit-to-do-item', 10)
                                             }
                                         });
                                     }//end for loop
@@ -457,9 +403,6 @@ let setServer = (server) => {
             stateManagement.updateToDoListHistory(details.listDetails, (err, listHistoryDetails) => {
                 if (err) {
                     socket.emit('state-management-error', { status: 202, error: 'Some error occured in maintaining state of List' })
-                }
-                else {
-                    console.log(listHistoryDetails)
                 }
             })
 
@@ -520,10 +463,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: delete-to-do-item', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.error('mail sent successfully', 'socketLib: delete-to-do-item', 10)
                                             }
                                         });
                                     }//end for loop
@@ -535,9 +477,6 @@ let setServer = (server) => {
             stateManagement.updateToDoListHistory(details.listDetails, (err, listHistoryDetails) => {
                 if (err) {
                     socket.emit('state-management-error', { status: 202, error: 'Some error occured in maintaining state of List' })
-                }
-                else {
-                    console.log(listHistoryDetails)
                 }
             })
 
@@ -598,10 +537,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: change-status-of-item', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.info('mail sent successfully', 'socketLib: change-status-of-item', 10)
                                             }
                                         });
                                     }//end for loop
@@ -613,9 +551,6 @@ let setServer = (server) => {
             stateManagement.updateToDoListHistory(details.listDetails, (err, listHistoryDetails) => {
                 if (err) {
                     socket.emit('state-management-error', { status: 202, error: 'Some error occured in maintaining state of List' })
-                }
-                else {
-                    console.log(listHistoryDetails)
                 }
             })
 
@@ -672,10 +607,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: delete-to-do-list', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.error('mail sent successfully', 'socketLib: delete-to-do-list', 10)
                                             }
                                         });
                                     }//end for loop
@@ -737,10 +671,9 @@ let setServer = (server) => {
                                         // send mail with defined transport object
                                         transporter.sendMail(mailOptions, (err) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'socketLib: undo-action', 10)
                                             } else {
-                                                console.log('mail sent successfully')
+                                                logger.error('mail sent successfully', 'socketLib: undo-action', 10)
                                             }
                                         });
                                     }//end for loop

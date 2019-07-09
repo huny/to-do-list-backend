@@ -13,7 +13,6 @@ const ToDoListHistoryModel = mongoose.model('ToDoListHistory')
 //create a new ToDolist
 let createToDoList = (req, res) => {
     if (check.isEmpty(req.body.userId) || check.isEmpty(req.body.listName)) {
-        console.log("403, forbidden request");
         let apiResponse = response.generate(true, 'One or more required parameters are missing', 403, null)
         res.send(apiResponse)
     } else {
@@ -28,7 +27,6 @@ let createToDoList = (req, res) => {
 
         newList.save((err, listDetails) => {
             if (err) {
-                console.log('Error Occured.')
                 logger.error(`Error Occured : ${err}`, 'Database', 10)
                 let apiResponse = response.generate(true, 'Error Occured.', 500, null)
                 res.send(apiResponse)
@@ -43,21 +41,15 @@ let createToDoList = (req, res) => {
 //add toDoitems to List
 let addItemToList = (req, res) => {
     if (check.isEmpty(req.body.listId) || check.isEmpty(req.body.parentId) || check.isEmpty(req.body.itemName)) {
-        console.log("403, forbidden request");
         let apiResponse = response.generate(true, 'One or more required parameters are missing', 403, null)
         res.send(apiResponse)
     } else {
         ToDoListModel.findOne({ 'listId': req.body.listId }, (err, result) => {
-
             if (err) {
-
-                console.log('Error Occured.')
                 logger.error(`Error Occured : ${err}`, 'Database', 10)
                 let apiResponse = response.generate(true, 'Error Occured.', 500, null)
                 res.send(apiResponse)
             } else if (check.isEmpty(result)) {
-
-                console.log('List Not Found.')
                 let apiResponse = response.generate(true, 'List Not Found', 202, null)
                 res.send(apiResponse)
             } else {
@@ -70,7 +62,6 @@ let addItemToList = (req, res) => {
                 if (req.body.listId === req.body.parentId) {
                     ToDoListModel.update({ listId: req.body.listId }, { $push: { listItems: toDoItems } }).exec((err, result) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'toDoList Controller:addItems', 10)
                             let apiResponse = response.generate(true, 'Failed To add to-do-items', 500, null)
                             res.send(apiResponse)
@@ -84,7 +75,6 @@ let addItemToList = (req, res) => {
                                 .lean()
                                 .exec((err, listDetails) => {
                                     if (err) {
-                                        console.log(err)
                                         logger.error(err.message, 'toDoList Controller:addItems', 10)
                                         let apiResponse = response.generate(true, 'Failed To Find item Details', 500, null)
                                         res.send(apiResponse)
@@ -105,7 +95,6 @@ let addItemToList = (req, res) => {
                         { listId: req.body.listId, 'listItems.itemId': req.body.parentId },
                         { $push: { listItems: toDoItems } }).exec((err, result) => {
                             if (err) {
-                                console.log(err)
                                 logger.error(err.message, 'toDoList Controller:addItems', 10)
                                 let apiResponse = response.generate(true, 'Failed To add to-do-items', 500, null)
                                 res.send(apiResponse)
@@ -119,7 +108,6 @@ let addItemToList = (req, res) => {
                                     .lean()
                                     .exec((err, listDetails) => {
                                         if (err) {
-                                            console.log(err)
                                             logger.error(err.message, 'toDoList Controller:addItems', 10)
                                             let apiResponse = response.generate(true, 'Failed To Find item Details', 500, null)
                                             res.send(apiResponse)
@@ -144,7 +132,6 @@ let addItemToList = (req, res) => {
 //edit to-do-item
 let editItem = (req, res) => {
     if (check.isEmpty(req.body.itemId) || check.isEmpty(req.body.itemName)) {
-        console.log("403, forbidden request");
         let apiResponse = response.generate(true, 'One or more required parameters are missing', 403, null)
         res.send(apiResponse)
     } else {
@@ -153,7 +140,6 @@ let editItem = (req, res) => {
             { $set: { 'listItems.$.itemName': req.body.itemName, 'listItems.$.lastModifiedBy': req.body.loggedOnUser } })
             .exec((err, result) => {
                 if (err) {
-                    console.log(err)
                     logger.error(err.message, 'toDoList Controller:editItem', 10)
                     let apiResponse = response.generate(true, 'Failed To update to-do-item', 500, null)
                     res.send(apiResponse)
@@ -167,7 +153,6 @@ let editItem = (req, res) => {
                         .lean()
                         .exec((err, listDetails) => {
                             if (err) {
-                                console.log(err)
                                 logger.error(err.message, 'toDoList Controller:editItem', 10)
                                 let apiResponse = response.generate(true, 'Failed To Find item Details', 500, null)
                                 res.send(apiResponse)
@@ -188,7 +173,6 @@ let editItem = (req, res) => {
 //delete to-do-item
 let deleteItem = (req, res) => {
     if (check.isEmpty(req.body.itemId)) {
-        console.log("403, forbidden request");
         let apiResponse = response.generate(true, 'One or more required parameters are missing', 403, null)
         res.send(apiResponse)
     } else {
@@ -198,7 +182,6 @@ let deleteItem = (req, res) => {
             { $pull: { listItems: { parentId: req.body.itemId } } }
         ).exec((err, result) => {
             if (err) {
-                console.log(err)
                 logger.error(err.message, 'toDoList Controller: deleteItem', 10)
                 let apiResponse = response.generate(true, 'Failed To delete item', 500, null)
                 res.send(apiResponse)
@@ -207,13 +190,11 @@ let deleteItem = (req, res) => {
                 let apiResponse = response.generate(true, 'No item Found', 404, null)
                 res.send(apiResponse)
             } else {
-                console.log(req.body.listId)
                 ToDoListModel.findOne({ listId: req.body.listId })
                     .select('-__v -_id')
                     .lean()
                     .exec((err, listDetails) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'toDoList Controller:addItems', 10)
                             let apiResponse = response.generate(true, 'Failed To Find item Details', 500, null)
                             res.send(apiResponse)
@@ -222,7 +203,6 @@ let deleteItem = (req, res) => {
                                 modifiedBy: req.body.loggedOnUser,
                                 listDetails: listDetails
                             }
-                            console.log(result)
                             let apiResponse = response.generate(false, 'Deleted the item successfully', 200, result)
                             res.send(apiResponse)
                         }
@@ -240,7 +220,6 @@ let changeStatusOfItem = (req, res) => {
         { $set: { 'listItems.$.isCompleted': isCompleted, 'listItems.$.lastModifiedBy': req.body.loggedOnUser } })
         .exec((err, result) => {
             if (err) {
-                console.log(err)
                 logger.error(err.message, 'toDoList Controller:addItems', 10)
                 let apiResponse = response.generate(true, 'Failed To add to-do-items', 500, null)
                 res.send(apiResponse)
@@ -254,7 +233,6 @@ let changeStatusOfItem = (req, res) => {
                     .lean()
                     .exec((err, listDetails) => {
                         if (err) {
-                            console.log(err)
                             logger.error(err.message, 'toDoList Controller:addItems', 10)
                             let apiResponse = response.generate(true, 'Failed To Find item Details', 500, null)
                             res.send(apiResponse)
@@ -284,7 +262,6 @@ let getAllLists = (req, res) => {
         .lean()
         .exec((err, userDetails) => {
             if (err) {
-                console.log(err)
                 logger.error(err.message, 'toDoListController: getAllLists', 10)
                 let apiResponse = response.generate(true, 'Failed To Find user Details', 500, null)
                 res.send(apiResponse)
@@ -293,8 +270,6 @@ let getAllLists = (req, res) => {
                 let apiResponse = response.generate(true, 'No user found', 202, null)
                 res.send(apiResponse)
             } else {
-                console.log(req.params.userId)
-                console.log(userDetails.userId)
                 if (req.params.userId !== userDetails.userId && check.isEmpty(userDetails.friends.find(user => user.id === req.params.userId))) {
                     let apiResponse = response.generate(true, 'Only user or his friends can perform this action', 202, null)
                     res.send(apiResponse)
@@ -304,7 +279,6 @@ let getAllLists = (req, res) => {
                         .lean()
                         .exec((err, result) => {
                             if (err) {
-                                console.log(err)
                                 logger.error(err.message, 'toDoListController: getAllLists', 10)
                                 let apiResponse = response.generate(true, 'Failed To Find list Details', 500, null)
                                 res.send(apiResponse)
@@ -357,7 +331,6 @@ let deleteToDoList = (req, res) => {
 
                                 ToDoListModel.findOne({ listId: req.body.listId }).exec((err, result) => {
                                     if (err) {
-                                        console.log(err)
                                         logger.error(err.message, 'toDoListController Controller: deleteToDoList', 10)
                                         let apiResponse = response.generate(true, 'Failed To find list', 500, null)
                                         res.send(apiResponse)
@@ -368,7 +341,6 @@ let deleteToDoList = (req, res) => {
                                     } else {
                                         ToDoListModel.remove({ listId: req.body.listId }).exec((err, result) => {
                                             if (err) {
-                                                console.log(err)
                                                 logger.error(err.message, 'toDoListController Controller: deleteToDoList', 10)
                                                 let apiResponse = response.generate(true, 'Failed To delete meeting', 500, null)
                                                 res.send(apiResponse)
@@ -436,19 +408,13 @@ let undoActions = (req, res) => {
                     { $set: { past: newPastState, present: previousState } })
                     .exec((err, details) => {
                         if (err) {
-                            console.log(`1${err.message}`)
                             logger.error(err.message, 'toDoListController: deleteToDoList', 10)
                             let apiResponse = response.generate(true, 'Failed To update list state', 500, null)
                             res.send(apiResponse)
                         } else {
-                            console.log('This is previous state')
-                            console.log(previousState)
-
                             ToDoListModel.findOne({ listId: req.params.listId })
                                 .exec((err, listModelDetails) => {
                                     if (err) {
-
-                                        console.log('Error Occured.')
                                         logger.error(`Error Occured : ${err}`, 'Database', 10)
                                         let apiResponse = response.generate(true, 'Error Occured.', 500, null)
                                         res.send(apiResponse)
@@ -463,7 +429,6 @@ let undoActions = (req, res) => {
 
                                         oldList.save((err, todoListDetails) => {
                                             if (err) {
-                                                console.log('Error Occured.')
                                                 logger.error(`Error Occured : ${err}`, 'Database', 10)
                                                 let apiResponse = response.generate(true, 'Error Occured.', 500, null)
                                                 res.send(apiResponse)
@@ -477,7 +442,6 @@ let undoActions = (req, res) => {
                                             { $set: { listItems: previousState.listItems } })
                                             .exec((err, details) => {
                                                 if (err) {
-                                                    console.log(`2${err.message}`)
                                                     logger.error(err.message, 'toDoListController: deleteToDoList', 10)
                                                     let apiResponse = response.generate(true, 'Failed To update list state', 500, null)
                                                     res.send(apiResponse)
@@ -489,7 +453,6 @@ let undoActions = (req, res) => {
                                                                 let apiResponse = response.generate(true, 'Failed To find list state', 500, null)
                                                                 res.send(apiResponse)
                                                             } else {
-                                                                console.log(listDetails)
                                                                 let result = {
                                                                     listState: listState,
                                                                     listDetails: listDetails
